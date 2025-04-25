@@ -1,0 +1,42 @@
+services:
+
+    nest-server:
+        image: nest/nest-simulator:dev
+        build:
+            dockerfile: nest-fix.Dockerfile
+        volumes:
+            - ./:/experiment
+            - ./nestml/target:/tmp/nestmlmodules
+        ports:
+            - 9000:9000
+        environment:
+            NEST_CONTAINER_MODE: "nest-server"
+            NEST_SERVER_BUFFER_SIZE: 65535
+            NEST_SERVER_HOST: "0.0.0.0"
+            NEST_SERVER_MODULES: 'import nest; import numpy; import os; import json; import sys'
+            NEST_SERVER_PORT: 9000
+            NEST_SERVER_RESTRICTION_OFF: 1
+            NEST_SERVER_ENABLE_EXEC_CALL: 1
+            NEST_SERVER_DISABLE_AUTH: 1
+            NEST_SERVER_DISABLE_RESTRICTION: 1
+            NEST_SERVER_STDOUT: 1
+            NEST_SERVER_MPI_NUM: 2
+            OMPI_ALLOW_RUN_AS_ROOT: 1
+            OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+            NEST_SERVER_MPI_LOGGER_LEVEL: "DEBUG"
+            NESTML_MODULES_PATH: /tmp/nestmlmodules
+        working_dir: /experiment
+
+
+    nrp-core-service:
+        image: docker-registry.ebrains.eu/neurorobotics/nrp/nrp-core/nrp-pybullet-ubuntu20:latest
+        volumes:
+            - ./:/experiment
+            - /tmp/.X11-unix:/tmp/.X11-unix
+            - ~/.Xauthority:/root/.Xauthority
+        command: NRPCoreSim -c /experiment/simulation_config_nest_docker_compose.json --floglevel debug
+        # tty: true
+        depends_on:
+            - nest-server
+        environment:
+            DISPLAY: $DISPLAY

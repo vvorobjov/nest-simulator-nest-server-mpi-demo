@@ -1,0 +1,11 @@
+services:
+
+    nest-server:
+        image: nest/nest-simulator:dev
+        volumes:
+            - ./nestml:/experiment
+        environment:
+            LOCAL_USER_ID: "`id -u $USER`"
+            NEST_CONTAINER_MODE: "random-mode"
+        working_dir: /experiment
+        command: python3 generate_controller_module.py
